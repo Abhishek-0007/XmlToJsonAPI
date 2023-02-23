@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using XmlToJsonAPI.DAL.Entity;
+using XmlToJsonAPI.Models.RequestViewModel;
+using XmlToJsonAPI.Models.ResponseViewModel;
 using XmlToJsonAPI.Services.Interfaces;
 
 namespace XmlToJsonAPI.Controllers
@@ -15,12 +17,26 @@ namespace XmlToJsonAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetXmlTemplate()
+        public async Task<Object> GetXmlTemplateAsync()
         {
-            var code = "template-1";
-            await _service.GetXmlDocumentAsync(code);
+            var response = await _service.GetXmlDocumentAsync("template-1");
+            INFORMATION info = new INFORMATION();
+            info.Timestamp = DateTime.Now;
 
-            return NoContent();
+            if(response != null)
+            {
+                info.Body = response;
+                info.Code = "200";
+                info.Message = "Success";
+            }
+            else
+            {
+                info.Body = null;
+                info.Code = "404";
+                info.Message = "Failed";
+            }
+
+            return info;
         }
     }
 }

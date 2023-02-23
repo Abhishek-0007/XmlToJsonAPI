@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Primitives;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,7 +12,8 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using XmlToJsonAPI.DAL.Repositories.Interfaces;
-using XmlToJsonAPI.Models;
+using XmlToJsonAPI.Models.RequestViewModel;
+using XmlToJsonAPI.Models.ResponseViewModel;
 using XmlToJsonAPI.Services.Interfaces;
 
 namespace XmlToJsonAPI.Services.Implementations
@@ -22,76 +25,32 @@ namespace XmlToJsonAPI.Services.Implementations
         { 
             _repository = serviceProvider.GetRequiredService<IXmlRepository>();
         }
-        public async Task GetXmlDocumentAsync(string code)
+        public async Task<Object> GetXmlDocumentAsync(String code)
         {
-            var xmlTemplate = await _repository.GetXmlTemplateByCodeAsync(code);
-            var xmlString = xmlTemplate.Xml;
-
-            XmlDocument xmlDocument = new XmlDocument();
-            xmlDocument.LoadXml(xmlString);
-            Console.WriteLine(xmlString);
-            ConvertToJson(xmlDocument);
-        }
-
-        private void ConvertToJson(XmlDocument xml)
-        {
-            string rootElement = xml.DocumentElement.Name;
-            XmlNodeList root = xml.SelectNodes($"//{rootElement}");
-            string result = "";
-
-            INFORMATION inf = new INFORMATION()
-            {
-                AdditionalFields = new List<ADDITIONAL_FIELDS>()
-            };
-
-            InfoModel infoModel = new InfoModel()
-            {
-                Body = new Body()
-                {
-                   INFORMATIONS = new List<INFORMATION> {}
-                }
-            };
-
-
-
+            Object response = new Object();
             try
             {
-                foreach (XmlNode child in root.Item(0).ChildNodes)
-                {
-                    ADDITIONAL_FIELDS customClass = new ADDITIONAL_FIELDS();
-                    foreach (XmlNode childNode in child.ChildNodes)
-                    {
-                        PropertyInfo pr = customClass.GetType().GetProperty(childNode.Name);
-
-                        if (pr.Name.Equals(childNode.Name))
-                        {
-                            string value = childNode.InnerText;
-                            pr.SetValue(customClass, value);
-                        }
-                    }
-                    if (customClass != null)
-                    {
-                        inf.AdditionalFields.Add(customClass);
-                    }
-                }
-                infoModel.Body.INFORMATIONS.Add(inf);
-                infoModel.Message = "Success";
-                infoModel.Code = "200";
-                infoModel.Timestamp = DateTime.Now;
+                var xmlTemplate = await _repository.GetXmlTemplateByCodeAsync(code);
+                var xmlString = xmlTemplate.Xml;
+                XmlDocument xmlDocument = new XmlDocument();
+                xmlDocument.LoadXml(xmlString);
+                response = ConvertToJson(xmlDocument);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                infoModel.Message = ex.Message;
-                infoModel.Body = null;
-                infoModel.Code = "404";
-                infoModel.Timestamp = DateTime.Now;
+                response = null;
             }
+            
+            return response;
+        }
 
-            result = JsonConvert.SerializeObject(infoModel);
+        private Object ConvertToJson(XmlDocument xml)
+        {
+            var fromXml = JsonConvert.SerializeXmlNode(xml);
 
-            Console.WriteLine(result);
+            JObject jObject = JObject.Parse(fromXml);
 
-
+            return JsonConvert.DeserializeObject<Information>(fromXml);  
         }
     }
 }

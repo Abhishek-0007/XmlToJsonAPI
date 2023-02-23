@@ -16,13 +16,32 @@ namespace XmlToJsonAPI.DAL.Repositories.Implementations
 
         public async Task<IEnumerable<XmlTemplate>> GetAllXmlTemplateAsync()
         {
-           var list = await _context.XmlTemplates.ToListAsync();
+            List<XmlTemplate> list;
+
+            try
+            {
+              list =  await _context.XmlTemplates.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                list = null;
+            }
+
             return list;
         }
 
         public async Task<XmlTemplate> GetXmlTemplateByCodeAsync(string code)
         {
-            var item = await _context.XmlTemplates.Where(t => t.Code.Equals(code)).FirstOrDefaultAsync();
+            XmlTemplate item;
+            try
+            {
+                item = await _context.XmlTemplates.Where(t => t.Code.Equals(code)).FirstOrDefaultAsync();
+            }
+            catch(Exception ex)
+            {
+                item = null;
+            }
+
             return item;
         }
     }

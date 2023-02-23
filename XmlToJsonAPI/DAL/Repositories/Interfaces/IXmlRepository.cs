@@ -1,4 +1,5 @@
 ﻿using XmlToJsonAPI.DAL.Entity;
+using XmlToJsonAPI.Models.RequestViewModel;
 
 namespace XmlToJsonAPI.DAL.Repositories.Interfaces
 {
@@ -6,6 +7,6 @@ namespace XmlToJsonAPI.DAL.Repositories.Interfaces
     {
         public Task<IEnumerable<XmlTemplate>> GetAllXmlTemplateAsync();
 
-        public Task<XmlTemplate> GetXmlTemplateByCodeAsync(string code);
+        public Task<XmlTemplate> GetXmlTemplateByCodeAsync(String code);
     }
 }
